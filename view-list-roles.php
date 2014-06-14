@@ -18,3 +18,6 @@ require_once 'view-header.php';
         });
     });
 </script>
+
+</body>
+</html>

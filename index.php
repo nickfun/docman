@@ -13,12 +13,6 @@ function fetchAll($sql, $db) {
     return $r->fetchAll(PDO::FETCH_ASSOC);
 }
 
-$list = fetchAll("select * from roles", $db);
-
-foreach ($list as $row) {
-    printf("Role %d - %s", $row['id'], $row['title']);
-}
-
 function loadView($file, $DATA) {
 //    echo "<h1>$file</h1>";
 //    var_dump($DATA);
@@ -44,6 +38,28 @@ function viewRole($db, $roleId) {
         WHERE r.id = $roleId";
     $groups = fetchAll($groupsSql, $db);
 
+    $groupIds = array();
+    foreach ($groups as $row) {
+        $groupIds[] = (int) $row['id'];
+    }
+    $groupIdList = implode(",", $groupIds);
+    $groupOptionMapSql = "
+        select g.id, group_concat(o.id) as option_id_list
+        from groups as g
+        left join group_option_map as gom on gom.group_id = g.id
+        left join options as o on gom.option_id = o.id
+        where g.id in ($groupIdList)
+        group by g.id";
+    $groupOptionMapResults = fetchAll($groupOptionMapSql, $db);
+    $groupOptionMap = array();
+    foreach ($groupOptionMapResults as $row) {
+        $list = explode(",", $row['option_id_list']);
+        $groupOptionMap[] = array(
+            'groupid' => $row['id'],
+            'options' => $list,
+        );
+    }
+
     // get options for role
     $optionsSql = "
         select g.*, o.*
@@ -58,6 +74,7 @@ function viewRole($db, $roleId) {
     loadView('view-form.php', array(
         'groups' => $groups,
         'options' => $options,
+        'groupOptionMap' => $groupOptionMap,
     ));
 }
 
