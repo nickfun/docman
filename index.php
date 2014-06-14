@@ -63,7 +63,7 @@ function viewRole($db, $roleId) {
     foreach ($groupOptionMapResults as $row) {
         $list = explode(",", $row['option_id_list']);
         $groupOptionMap[] = array(
-            'groupid' => $row['id'],
+            'group_id' => $row['id'],
             'options' => $list,
         );
     }
