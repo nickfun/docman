@@ -19,6 +19,7 @@
             */
             body {
                 color: #304269;
+                background-color: #fff;
             }
             h1 {
                 font-size: 40px;
@@ -70,6 +71,9 @@
                 background-color: #304269;
                 font-weight: bold;
                 border: 2px solid #304269;
+            }
+            .noinput {
+                color: #999;
             }
         </style>
     </head>

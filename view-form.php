@@ -21,7 +21,7 @@ require_once 'view-header.php';
     </div> 
     <div class="formcontrol">
         <label>
-            <input type="text" name="date" id="date" readonly="readonly">
+            <input type="text" name="date" id="date" readonly="readonly" class="noinput">
             Timestamp
         </label>
     </div>

@@ -134,6 +134,7 @@ try {
     <body><h1>ERROR</h1><p>There was a problem:</p>
         <h2><?= $ex->getMessage() ?></h2>
         <pre><?= $ex->getTraceAsString() ?></pre>
+        <p><a href="<?= basename(__FILE__) ?>">Home</a></p>
     </body>
     <?php
     die("EXCEPTION");
