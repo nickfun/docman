@@ -20,21 +20,21 @@ foreach ($list as $row) {
 }
 
 function loadView($file, $DATA) {
-    echo "<h1>$file</h1>";
-    var_dump($DATA);
-    die();
+//    echo "<h1>$file</h1>";
+//    var_dump($DATA);
+//    die();
     include $file;
     die();
 }
 
 function viewListOfRoles($db) {
     $list = fetchAll("SELECT * FROM roles ORDER BY title DESC", $db);
-    loadView("list-roles.php", $list);
+    loadView("view-list-roles.php", $list);
 }
 
 function viewRole($db, $roleId) {
     $roleId = (int) $roleId;
-    
+
     // get groups for role
     $groupsSql = "
         SELECT g.*
@@ -43,7 +43,7 @@ function viewRole($db, $roleId) {
         LEFT JOIN groups AS g ON rgm.group_id = g.id
         WHERE r.id = $roleId";
     $groups = fetchAll($groupsSql, $db);
-    
+
     // get options for role
     $optionsSql = "
         select g.*, o.*
@@ -54,7 +54,8 @@ function viewRole($db, $roleId) {
         left join options as o on gom.option_id = o.id
         where r.id = $roleId";
     $options = fetchAll($optionsSql, $db);
-    loadView('form.php', array(
+
+    loadView('view-form.php', array(
         'groups' => $groups,
         'options' => $options,
     ));
