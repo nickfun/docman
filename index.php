@@ -1,24 +1,12 @@
 <?php
-
 require_once './bootstrap.php';
 
 use Pop\Color\Space\Rgb;
 use Pop\Pdf\Pdf;
 
-// ====[ CONFIG ]==============================================
-// ====[ CONFIG ]==============================================
-// ====[ CONFIG ]==============================================
-
-$DB_HOST = 'localhost';
-$DB_NAME = 'docman';
-$DB_USER = 'root';
-$DB_PASS = 'root';
-
-// ====[ END CONFIG ]==========================================
-// ====[ END CONFIG ]==========================================
-// ====[ END CONFIG ]==========================================
-
-$db = new PDO("mysql:host=localhost;dbname=docman", "root", "root");
+$CONFIG = parse_ini_file("database-config.ini", false);
+$dsn = sprintf("mysql:host=%s;dbname=%s", $CONFIG['DB_HOST'], $CONFIG['DB_NAME']);
+$db = new PDO($dsn, $CONFIG['DB_USER'], $CONFIG['DB_PASS']);
 
 function fetchAll($sql, $db) {
     $r = $db->query($sql);
@@ -116,23 +104,37 @@ function buildPdf($data) {
 
         $pdf->setCompression(true);
 
-        $pdf->setTextParams(6, 6, 100, 100, 30, 0)
+        $pdf->setTextParams()
                 ->setFillColor(new Rgb(12, 101, 215))
                 ->setStrokeColor(new Rgb(215, 101, 12));
         $pdf->addFont('Arial');
-        $pdf->addText(50, 620, 18, $data['notes'], 'Arial');
+        $pdf->addText(50, 620, 48, $data['notes'], 'Arial');
+
+        $pdf->output();
     } catch (\Exception $e) {
         var_dump($e->getTrace());
     }
 }
 
 // =================
+// =================
+// =================
 
-if (isset($_GET['role'])) {
-    $roleId = (int) $_GET['role'];
-    viewRole($db, $roleId);
-} else if (!empty($_POST)) {
-    buildPdf($_POST);
-} else {
-    viewListOfRoles($db);
+try {
+    if (isset($_GET['role'])) {
+        $roleId = (int) $_GET['role'];
+        viewRole($db, $roleId);
+    } else if (!empty($_POST)) {
+        buildPdf($_POST);
+    } else {
+        viewListOfRoles($db);
+    }
+} catch (Exception $ex) {
+    ?>
+    <body><h1>ERROR</h1><p>There was a problem:</p>
+        <h2><?= $ex->getMessage() ?></h2>
+        <pre><?= $ex->getTraceAsString() ?></pre>
+    </body>
+    <?php
+    die("EXCEPTION");
 }

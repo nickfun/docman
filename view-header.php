@@ -57,6 +57,20 @@
             .formcontrol label {
                 font-size: 18px;
             }
+            .cancel {
+                margin: 40px;
+                color: #f26101
+            }
+            .cancel a,
+            .cancel a:visited,
+            .cancel a:active
+            {
+                padding: 5px;
+                color: #d9e8f5;
+                background-color: #304269;
+                font-weight: bold;
+                border: 2px solid #304269;
+            }
         </style>
     </head>
     <body>

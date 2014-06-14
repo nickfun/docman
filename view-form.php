@@ -34,8 +34,12 @@ require_once 'view-header.php';
     <div class="formcontrol">
         <button type="submit" class="btn btn-default">Save to database, Create PDF</button>
     </div>
-    
+
 </form>
+
+<div class="cancel">
+    <a href="index.php">Cancel!</a>
+</div>
 
 
 <script type="text/template" id="tpl-optionlist">
@@ -107,8 +111,8 @@ require_once 'view-header.php';
             $main.append(view.$el);
         });
     });
-    
-    $('#date').val( new Date());
+
+    $('#date').val(new Date());
 
 </script>
 
