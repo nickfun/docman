@@ -2,6 +2,22 @@
 
 require_once './bootstrap.php';
 
+use Pop\Color\Space\Rgb;
+use Pop\Pdf\Pdf;
+
+// ====[ CONFIG ]==============================================
+// ====[ CONFIG ]==============================================
+// ====[ CONFIG ]==============================================
+
+$DB_HOST = 'localhost';
+$DB_NAME = 'docman';
+$DB_USER = 'root';
+$DB_PASS = 'root';
+
+// ====[ END CONFIG ]==========================================
+// ====[ END CONFIG ]==========================================
+// ====[ END CONFIG ]==========================================
+
 $db = new PDO("mysql:host=localhost;dbname=docman", "root", "root");
 
 function fetchAll($sql, $db) {
@@ -28,7 +44,7 @@ function viewListOfRoles($db) {
 
 function viewRole($db, $roleId) {
     $roleId = (int) $roleId;
-    
+
     // get role info
     $roleSql = "SELECT * FROM roles WHERE id=$roleId";
     $row = fetchAll($roleSql, $db);
@@ -87,11 +103,36 @@ function viewRole($db, $roleId) {
     ));
 }
 
+function buildPdf($data) {
+    try {
+        $pdf = new Pdf('./doc.pdf');
+        $pdf->addPage('Letter');
+
+        $pdf->setVersion('1.4')
+                ->setTitle('TICKET NUMBER')
+                ->setAuthor('Pac Bio')
+                ->setSubject('Subject goes here')
+                ->setCreateDate(date('D, M j, Y h:i A'));
+
+        $pdf->setCompression(true);
+
+        $pdf->setTextParams(6, 6, 100, 100, 30, 0)
+                ->setFillColor(new Rgb(12, 101, 215))
+                ->setStrokeColor(new Rgb(215, 101, 12));
+        $pdf->addFont('Arial');
+        $pdf->addText(50, 620, 18, $data['notes'], 'Arial');
+    } catch (\Exception $e) {
+        var_dump($e->getTrace());
+    }
+}
+
 // =================
 
 if (isset($_GET['role'])) {
     $roleId = (int) $_GET['role'];
     viewRole($db, $roleId);
+} else if (!empty($_POST)) {
+    buildPdf($_POST);
 } else {
     viewListOfRoles($db);
 }

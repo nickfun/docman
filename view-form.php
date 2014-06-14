@@ -4,18 +4,47 @@ require_once 'view-header.php';
 
 <h1 id="header" class="role"></h1>
 
-<form method="post" action="index.php">
+<form method="post" action="index.php" role="form">
     <div id="main"></div>
-    <button type="submit">Save to database, Create PDF</button>
+    <h2>Meta</h2>
+    <div class="formcontrol">
+        <label>
+            <input type="text" name="author">
+            Your Name
+        </label>
+    </div>
+    <div class="formcontrol">
+        <label>
+            <input type="text" name="ticket">
+            Ticket Number
+        </label>
+    </div> 
+    <div class="formcontrol">
+        <label>
+            <input type="text" name="date" id="date" readonly="readonly">
+            Timestamp
+        </label>
+    </div>
+    <div class="formcontrol">
+        <label>
+            Notes
+            <textarea name="notes"></textarea>
+        </label>
+    </div>
+    <div class="formcontrol">
+        <button type="submit" class="btn btn-default">Save to database, Create PDF</button>
+    </div>
+    
 </form>
 
+
 <script type="text/template" id="tpl-optionlist">
-    <li class="option">
+    <div class="formcontrol">
     <label>
-    <input type="checkbox" name="option[<%- id %>]">
+    <input type="checkbox"  name="option[<%- id %>]" class="form-control">
     <%- title %>
     </label>
-    </li>
+    </div>
 </script>
 
 <script>
@@ -28,8 +57,8 @@ require_once 'view-header.php';
 
     var OptionListView = Backbone.View.extend({
         tpl: _.template($("#tpl-optionlist").text()),
-        tagName: 'ul',
-        className: 'option-list',
+        tagName: 'div',
+        className: 'aaaaaaa',
         render: function() {
             this.$el.empty();
             var that = this;
@@ -44,8 +73,8 @@ require_once 'view-header.php';
 
     var GroupListView = Backbone.View.extend({
         tpl: _.template($("#tpl-grouplist").text()),
-        tagName: 'ul',
-        className: 'group-list',
+        tagName: 'div',
+        className: 'bbbbbbb',
         render: function() {
             this.$el.empty();
             var optionList = new Backbone.Collection();
@@ -57,7 +86,7 @@ require_once 'view-header.php';
             });
             view.render();
             var group = window.DATA.groups.get(this.model.get('group_id'));
-            this.$el.append("<div class='group'>" + group.get('title') + '</div>');
+            this.$el.append("<h2 class='cccccc'>" + group.get('title') + '</h2>');
             this.$el.append(view.$el);
             return this;
         }
@@ -78,6 +107,8 @@ require_once 'view-header.php';
             $main.append(view.$el);
         });
     });
+    
+    $('#date').val( new Date());
 
 </script>
 
