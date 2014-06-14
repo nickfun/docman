@@ -2,9 +2,12 @@
 require_once 'view-header.php';
 ?>
 
-<h1 id="header"></h1>
+<h1 id="header" class="role"></h1>
 
-<div id="main"></div>
+<form method="post" action="index.php">
+    <div id="main"></div>
+    <button type="submit">Save to database, Create PDF</button>
+</form>
 
 <script type="text/template" id="tpl-optionlist">
     <li class="option">
@@ -54,8 +57,7 @@ require_once 'view-header.php';
             });
             view.render();
             var group = window.DATA.groups.get(this.model.get('group_id'));
-            debugger;
-            this.$el.append("<span class='group'>" + group.get('title') + '</span>');
+            this.$el.append("<div class='group'>" + group.get('title') + '</div>');
             this.$el.append(view.$el);
             return this;
         }
