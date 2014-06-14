@@ -28,6 +28,14 @@ function viewListOfRoles($db) {
 
 function viewRole($db, $roleId) {
     $roleId = (int) $roleId;
+    
+    // get role info
+    $roleSql = "SELECT * FROM roles WHERE id=$roleId";
+    $row = fetchAll($roleSql, $db);
+    if (empty($row)) {
+        throw new \Exception("Can not find role $roleId");
+    }
+    $role = $row[0];
 
     // get groups for role
     $groupsSql = "
@@ -75,6 +83,7 @@ function viewRole($db, $roleId) {
         'groups' => $groups,
         'options' => $options,
         'groupOptionMap' => $groupOptionMap,
+        'role' => $role,
     ));
 }
 
