@@ -4,10 +4,6 @@ require_once './bootstrap.php';
 use Pop\Color\Space\Rgb;
 use Pop\Pdf\Pdf;
 
-$CONFIG = parse_ini_file("database-config.ini", false);
-$dsn = sprintf("mysql:host=%s;dbname=%s", $CONFIG['DB_HOST'], $CONFIG['DB_NAME']);
-$db = new PDO($dsn, $CONFIG['DB_USER'], $CONFIG['DB_PASS']);
-
 function fetchAll($sql, $db) {
     $r = $db->query($sql);
     if (!$r) {
@@ -120,15 +116,36 @@ function buildPdf($data) {
 // =================
 // =================
 
+// Begin Application
+
+$CONFIG = parse_ini_file("database-config.ini", false);
+$dsn = sprintf("mysql:host=%s;dbname=%s", $CONFIG['DB_HOST'], $CONFIG['DB_NAME']);
+$db = new PDO($dsn, $CONFIG['DB_USER'], $CONFIG['DB_PASS']);
+
 try {
-    if (isset($_GET['role'])) {
+    $routes = array();
+    $routes['list-roles'] = function($GET,$POST) use ($db) {
+        viewListOfRoles($db);
+    };
+    $routes['view-role'] = function($GET,$POST) use ($db) {
         $roleId = (int) $_GET['role'];
         viewRole($db, $roleId);
-    } else if (!empty($_POST)) {
+    };
+    $routes['submit-form'] = function($GET,$POST) use ($db) {
         buildPdf($_POST);
+    };
+    
+    if (isset($_GET['route'])) {
+        $r = $_GET['route'];
     } else {
-        viewListOfRoles($db);
+        $r = 'list-roles';
     }
+    if (!isset($routes[$r])) {
+        throw new \Exception("I dont know what to do for this page. No route defined.");
+    }
+    $fn = $routes[$r];
+    $fn($_GET,$_POST);
+    
 } catch (Exception $ex) {
     ?>
     <body><h1>ERROR</h1><p>There was a problem:</p>
