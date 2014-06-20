@@ -115,7 +115,6 @@ function buildPdf($data) {
 // =================
 // =================
 // =================
-
 // Begin Application
 
 $CONFIG = parse_ini_file("database-config.ini", false);
@@ -124,17 +123,17 @@ $db = new PDO($dsn, $CONFIG['DB_USER'], $CONFIG['DB_PASS']);
 
 try {
     $routes = array();
-    $routes['list-roles'] = function($GET,$POST) use ($db) {
+    $routes['list-roles'] = function($GET, $POST) use ($db) {
         viewListOfRoles($db);
     };
-    $routes['view-role'] = function($GET,$POST) use ($db) {
+    $routes['view-role'] = function($GET, $POST) use ($db) {
         $roleId = (int) $_GET['role'];
         viewRole($db, $roleId);
     };
-    $routes['submit-form'] = function($GET,$POST) use ($db) {
+    $routes['submit-form'] = function($GET, $POST) use ($db) {
         buildPdf($_POST);
     };
-    
+
     if (isset($_GET['route'])) {
         $r = $_GET['route'];
     } else {
@@ -144,8 +143,7 @@ try {
         throw new \Exception("I dont know what to do for this page. No route defined.");
     }
     $fn = $routes[$r];
-    $fn($_GET,$_POST);
-    
+    $fn($_GET, $_POST);
 } catch (Exception $ex) {
     ?>
     <body><h1>ERROR</h1><p>There was a problem:</p>
