@@ -5,7 +5,9 @@ require_once 'view-header.php';
 <h1 id="header" class="role"></h1>
 
 <form method="post" action="index.php" role="form">
-	<input type="hidden" name="route" value="submit-form">
+    <input type="hidden" name="route" value="submit-form">
+    <input type="hidden" name="allOptionIds" id="allOptionIds" value="">
+    <input type="hidden" name="roleid" value='<?= $DATA['roleId'] ?>'>
     <div id="main"></div>
     <h2>Meta</h2>
     <div class="formcontrol">
@@ -59,6 +61,13 @@ require_once 'view-header.php';
     window.DATA.groups = new Backbone.Collection(RAWDATA.groups);
     window.DATA.options = new Backbone.Collection(RAWDATA.options);
     window.DATA.groupOptionsMap = new Backbone.Collection(RAWDATA.groupOptionMap);
+    
+    window.DATA.options.toCsvList = function() {
+        var str = this.reduce(function(memo, m) {
+            return m.id +"," + memo;
+        }, "");
+        return str.substring(0, str.length -1);
+    };
 
     var OptionListView = Backbone.View.extend({
         tpl: _.template($("#tpl-optionlist").text()),
@@ -69,7 +78,7 @@ require_once 'view-header.php';
             var that = this;
             this.collection.each(function(row) {
                 var result = that.tpl(row.attributes);
-                console.log("Result: ", result);
+                //console.log("Result: ", result);
                 that.$el.append(result);
             });
             return this;
@@ -99,6 +108,8 @@ require_once 'view-header.php';
 
     $(function() {
         $('#header').text(RAWDATA.role.title);
+        var listOfIds = DATA.options.toCsvList();
+        $('#allOptionIds').val(listOfIds);
     });
 
     $(function() {

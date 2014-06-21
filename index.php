@@ -28,7 +28,16 @@ function viewListOfRoles($db) {
     loadView("view-list-roles.php", $list);
 }
 
+/**
+ * @route
+ */
 function viewRole($db, $roleId) {
+    $data = loadRoleData($db, $roleId);
+    $data['roleId'] = $roleId;
+    loadView('view-form.php', $data);
+}
+
+function loadRoleData($db, $roleId) {
     $roleId = (int) $roleId;
 
     // get role info
@@ -81,19 +90,44 @@ function viewRole($db, $roleId) {
         where r.id = $roleId";
     $options = fetchAll($optionsSql, $db);
 
-    loadView('view-form.php', array(
+    return array(
         'groups' => $groups,
         'options' => $options,
         'groupOptionMap' => $groupOptionMap,
         'role' => $role,
-    ));
+    );
+    
 }
 
-function buildPdf($data) {
+function dataToArray($data) {
+    $arr = [];
+    foreach ($data as $o) {
+        $arr[ $o['id'] ] = $o;
+    }
+}
+
+/**
+ * @route POST
+ */
+function buildPdf($data, $db) {
+    echo "<pre>";
+    $roleData = loadRoleData($db, $data['roleid']);
+
+    $listString = $data['allOptionIds'];
+    $sql = "SELECT * FROM options WHERE id IN($listString);";
+    $options = fetchAll($sql, $db);
+    $options = dataToArray($options);
+    
+    //var_dump($data, $options); die();
+    
+    $iStart = 760;
+    $top = $iStart;
+    $size = 16;
+    $padding = 10;
     try {
         $pdf = new Pdf('./doc.pdf');
         $pdf->addPage('Letter');
-
+        
         $pdf->setVersion('1.4')
                 ->setTitle('TICKET NUMBER')
                 ->setAuthor('Pac Bio')
@@ -106,7 +140,19 @@ function buildPdf($data) {
                 ->setFillColor(new Rgb(12, 101, 215))
                 ->setStrokeColor(new Rgb(215, 101, 12));
         $pdf->addFont('Arial');
-        $pdf->addText(50, 620, 48, $data['notes'], 'Arial');
+        
+        foreach ($options as $option) {
+            $id = $option['id'];
+            $title = $option['title'];
+            if (isset($data['option'][$id])) {
+                $title = "[X] " . $title;
+            } else {
+                $title = "[ ] " . $title;
+            }
+            $pdf->addText(30, $top, $size, $title, 'Arial');
+            $top = $top - $size - $padding;
+        }
+        
 
         $pdf->output();
     } catch (\Exception $e) {
@@ -133,7 +179,7 @@ try {
         viewRole($db, $roleId);
     };
     $routes['submit-form'] = function($GET, $POST) use ($db) {
-        buildPdf($_POST);
+        buildPdf($_POST, $db);
     };
 
     if (isset($_GET['route'])) {
