@@ -6,6 +6,9 @@ error_reporting(E_ALL);
 use Pop\Color\Space\Rgb;
 use Pop\Pdf\Pdf;
 
+/**
+ * Given a SQL statement, execute it and return all the results as an array of arrays
+ */
 function fetchAll($sql, $db) {
     $r = $db->query($sql);
     if (!$r) {
@@ -23,6 +26,9 @@ function loadView($file, $DATA) {
     die();
 }
 
+/**
+ * @route
+ */
 function viewListOfRoles($db) {
     $list = fetchAll("SELECT * FROM roles ORDER BY title DESC", $db);
     loadView("view-list-roles.php", $list);
@@ -37,6 +43,9 @@ function viewRole($db, $roleId) {
     loadView('view-form.php', $data);
 }
 
+/**
+ * Fetch all the data needed to display a form or a PDF for one role
+ */
 function loadRoleData($db, $roleId) {
     $roleId = (int) $roleId;
 
@@ -96,38 +105,71 @@ function loadRoleData($db, $roleId) {
         'groupOptionMap' => $groupOptionMap,
         'role' => $role,
     );
-    
 }
 
+/**
+ * Turn an sequentail array of data into a map based on the ID field of the rows
+ */
 function dataToArray($data) {
     $arr = [];
     foreach ($data as $o) {
-        $arr[ $o['id'] ] = $o;
+        $arr[$o['id']] = $o;
     }
+    return $arr;
+}
+
+/**
+ * Simple function to manage writing to a PDF
+ * Keep the result and pass it in as the last parameter every time you call
+ * this so it can keep track of the next wiriting position.
+ * 
+ * You must intialze everything for the PDF, this function is only for writing text
+ * 
+ * lol
+ */
+function pdfWriteln($pdf, $string, $type, $lastPosition = 760) {
+    $topOfPage = 760;
+    $padding = 10;
+    $typeOptions = array(
+        'txt' => array(
+            'size' => 30, 'color' => new Rgb(0,0,0),
+        ),
+        'header' => array(
+            'size' => 40, 'color' => new Rgb(215,101,12),
+        ),
+    );
+    $style = $typeOptions[$type];
+    // add page?
+    $pos = $lastPosition - $padding - $style['size'];
+    if ($pos < $padding + $style['size']) {
+        $pos = $topOfPage;
+        $pdf->addPage("Letter");
+    }
+    $pdf->addText(30, $pos, $style['size'], $string, "Arial");
+    return $pos;
 }
 
 /**
  * @route POST
  */
-function buildPdf($data, $db) {
+function buildPdf($postData, $db) {
     echo "<pre>";
-    $roleData = loadRoleData($db, $data['roleid']);
+    $roleData = loadRoleData($db, $postData['roleid']);
 
-    $listString = $data['allOptionIds'];
+    $listString = $postData['allOptionIds'];
     $sql = "SELECT * FROM options WHERE id IN($listString);";
     $options = fetchAll($sql, $db);
     $options = dataToArray($options);
-    
-    //var_dump($data, $options); die();
-    
-    $iStart = 760;
-    $top = $iStart;
+    $groups = dataToArray($roleData['groups']);
+
+    $topOfPage = 760;
+    $top = $topOfPage;
     $size = 16;
     $padding = 10;
     try {
         $pdf = new Pdf('./doc.pdf');
         $pdf->addPage('Letter');
-        
+
         $pdf->setVersion('1.4')
                 ->setTitle('TICKET NUMBER')
                 ->setAuthor('Pac Bio')
@@ -141,6 +183,39 @@ function buildPdf($data, $db) {
                 ->setStrokeColor(new Rgb(215, 101, 12));
         $pdf->addFont('Arial');
         
+        foreach ($roleData['groupOptionMap'] as $groupRow) {
+            $groupId = $groupRow['group_id'];
+            $groupObj = $groups[$groupId];
+            $pdf->setTextParams()
+                ->setFillColor(new Rgb(0, 0, 0))
+                ->setStrokeColor(new Rgb(0, 0, 0));
+            $pdf->addText(30, $top, $size+10, $groupObj['title'], 'Arial');
+            $top = $top - $size - $padding;
+            if ( $top < $size + $padding + $padding) {
+                $top = $topOfPage;
+                $pdf->addPage("Letter");
+            }
+            foreach ($groupRow['options'] as $optionId) {
+                $optionObj = $options[$optionId];
+                if (isset($postData[$optionId])) {
+                    $title = '[X] ' . $optionObj['title'];
+                } else {
+                    $title = '[_] ' . $optionObj['title'];
+                }
+                $pdf->setTextParams()
+                    ->setFillColor(new Rgb(12, 101, 215))
+                    ->setStrokeColor(new Rgb(215, 101, 12));
+                $pdf->addText(50, $top, $size, $title, 'Arial');
+                $top = $top - $size - $padding;
+                if ( $top < $size + $padding + $padding) {
+                    $top = $topOfPage;
+                    $pdf->addPage("Letter");
+                }
+            }
+            
+        }
+
+        /*
         foreach ($options as $option) {
             $id = $option['id'];
             $title = $option['title'];
@@ -151,10 +226,16 @@ function buildPdf($data, $db) {
             }
             $pdf->addText(30, $top, $size, $title, 'Arial');
             $top = $top - $size - $padding;
+            if ($top < ($size + $padding + $padding)) {
+                $top = $iStart;
+                $pdf->addPage("Letter");
+            }
         }
-        
+         */
 
-        $pdf->output();
+        $pdf->save("./output.pdf");
+        echo "<a href='./output.pdf'>Here it is</a>";
+        //$pdf->output();
     } catch (\Exception $e) {
         var_dump($e->getTrace());
     }
@@ -181,11 +262,17 @@ try {
     $routes['submit-form'] = function($GET, $POST) use ($db) {
         buildPdf($_POST, $db);
     };
+    $routes['test'] = function($GET,$POST) {
+        $pdf = new Pdf("./test.pdf");
+        $p = pdfWriteln($pdf, "Hello!", "txt");
+        $p = pdfWriteln($pdf, "HOw are you?", "txt", $p);
+        $p->output();
+    };
 
     if (isset($_GET['route'])) {
         $r = $_GET['route'];
-	} else if (isset($_POST['route'])) {
-		$r = $_POST['route'];
+    } else if (isset($_POST['route'])) {
+        $r = $_POST['route'];
     } else {
         $r = 'list-roles';
     }
