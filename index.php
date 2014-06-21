@@ -1,6 +1,8 @@
 <?php
 require_once './bootstrap.php';
 
+error_reporting(E_ALL);
+
 use Pop\Color\Space\Rgb;
 use Pop\Pdf\Pdf;
 
@@ -136,6 +138,8 @@ try {
 
     if (isset($_GET['route'])) {
         $r = $_GET['route'];
+	} else if (isset($_POST['route'])) {
+		$r = $_POST['route'];
     } else {
         $r = 'list-roles';
     }

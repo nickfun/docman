@@ -5,6 +5,7 @@ require_once 'view-header.php';
 <h1 id="header" class="role"></h1>
 
 <form method="post" action="index.php" role="form">
+	<input type="hidden" name="route" value="submit-form">
     <div id="main"></div>
     <h2>Meta</h2>
     <div class="formcontrol">

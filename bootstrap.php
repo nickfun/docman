@@ -17,7 +17,7 @@
  * If you change the relationship between this file and the framework,
  * adjust the path accordingly.
  */
-require_once __DIR__ . './vendor/PopPHPFramework/src/Pop/Loader/Autoloader.php';
+require_once __DIR__ . '/vendor/PopPHPFramework/src/Pop/Loader/Autoloader.php';
 
 $autoloader = new \Pop\Loader\Autoloader();
 $autoloader->splAutoloadRegister();

@@ -6,6 +6,7 @@ require_once 'view-header.php';
 <form method="get" action="index.php">
     <select name="role" id="option-list"></select>
     <button type="submit">Next</button>
+	<input type="hidden" name="route" value="view-role">	
 </form>
 
 <script>
