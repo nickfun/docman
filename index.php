@@ -132,10 +132,13 @@ function pdfWriteln($pdf, $string, $type, $lastPosition = 760) {
     $padding = 10;
     $typeOptions = array(
         'txt' => array(
-            'size' => 30, 'color' => new Rgb(0,0,0),
+            'size' => 14, 'color' => new Rgb(12, 101, 215),
+        ),
+        'option' => array(
+            'size' => 16, 'color' => new Rgb(0,0,0),
         ),
         'header' => array(
-            'size' => 40, 'color' => new Rgb(215,101,12),
+            'size' => 26, 'color' => new Rgb(215,50,50),
         ),
     );
     $style = $typeOptions[$type];
@@ -145,6 +148,10 @@ function pdfWriteln($pdf, $string, $type, $lastPosition = 760) {
         $pos = $topOfPage;
         $pdf->addPage("Letter");
     }
+    // do the thing
+    $pdf->setTextParams()
+                ->setFillColor($style['color'])
+                ->setStrokeColor($style['color']);
     $pdf->addText(30, $pos, $style['size'], $string, "Arial");
     return $pos;
 }
@@ -161,11 +168,9 @@ function buildPdf($postData, $db) {
     $options = fetchAll($sql, $db);
     $options = dataToArray($options);
     $groups = dataToArray($roleData['groups']);
-
-    $topOfPage = 760;
-    $top = $topOfPage;
-    $size = 16;
-    $padding = 10;
+    
+//    var_dump($roleData);die;
+    
     try {
         $pdf = new Pdf('./doc.pdf');
         $pdf->addPage('Letter');
@@ -178,14 +183,25 @@ function buildPdf($postData, $db) {
 
         $pdf->setCompression(true);
 
-        $pdf->setTextParams()
-                ->setFillColor(new Rgb(12, 101, 215))
-                ->setStrokeColor(new Rgb(215, 101, 12));
+        $pdf->setTextParams();
+             //   ->setFillColor(new Rgb(12, 101, 215))
+             //   ->setStrokeColor(new Rgb(215, 101, 12));
         $pdf->addFont('Arial');
+        
+        $last = pdfWriteln($pdf, "Role: " . $roleData['role']['title'], "header");
+        $last = pdfWriteln($pdf, "By: " . $postData['author'], 'txt', $last);
+        $last = pdfWriteln($pdf, "# " . $postData['ticket'], 'txt', $last);
+        $last = pdfWriteln($pdf, $postData['date'], 'txt', $last);
+        
+        foreach (explode("\n", $postData['notes']) as $noteLine) {
+            $last = pdfWriteln($pdf, $noteLine, 'txt', $last);
+        }
         
         foreach ($roleData['groupOptionMap'] as $groupRow) {
             $groupId = $groupRow['group_id'];
             $groupObj = $groups[$groupId];
+            $last = pdfWriteln($pdf, $groupObj['title'], "header", $last);
+            /*
             $pdf->setTextParams()
                 ->setFillColor(new Rgb(0, 0, 0))
                 ->setStrokeColor(new Rgb(0, 0, 0));
@@ -195,13 +211,17 @@ function buildPdf($postData, $db) {
                 $top = $topOfPage;
                 $pdf->addPage("Letter");
             }
+            
+             */
             foreach ($groupRow['options'] as $optionId) {
                 $optionObj = $options[$optionId];
-                if (isset($postData[$optionId])) {
+                if (isset($postData['option'][$optionId])) {
                     $title = '[X] ' . $optionObj['title'];
                 } else {
                     $title = '[_] ' . $optionObj['title'];
                 }
+                $last = pdfWriteln($pdf, $title, 'option', $last);
+                /*
                 $pdf->setTextParams()
                     ->setFillColor(new Rgb(12, 101, 215))
                     ->setStrokeColor(new Rgb(215, 101, 12));
@@ -211,6 +231,7 @@ function buildPdf($postData, $db) {
                     $top = $topOfPage;
                     $pdf->addPage("Letter");
                 }
+                */
             }
             
         }

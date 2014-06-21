@@ -12,13 +12,13 @@ require_once 'view-header.php';
     <h2>Meta</h2>
     <div class="formcontrol">
         <label>
-            <input type="text" name="author">
+            <input type="text" name="author" required>
             Your Name
         </label>
     </div>
     <div class="formcontrol">
         <label>
-            <input type="text" name="ticket">
+            <input type="text" name="ticket" required>
             Ticket Number
         </label>
     </div> 
@@ -31,7 +31,7 @@ require_once 'view-header.php';
     <div class="formcontrol">
         <label>
             Notes
-            <textarea name="notes"></textarea>
+            <textarea name="notes" required></textarea>
         </label>
     </div>
     <div class="formcontrol">
