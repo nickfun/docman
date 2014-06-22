@@ -112,7 +112,7 @@ require_once 'view-header.php';
     });
 
     $(function() {
-        $('#header').text(RAWDATA.role.title);
+        $('#header').text("Role: " + RAWDATA.role.title);
         var listOfIds = DATA.options.toCsvList();
         $('#allOptionIds').val(listOfIds);
     });
