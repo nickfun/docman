@@ -130,6 +130,15 @@ require_once 'view-header.php';
     });
 
     $('#date').val(new Date());
+    
+    $(function() {
+        if (RAWDATA.meta) {
+            _.each(RAWDATA.meta, function(value,key) {
+                var $input = $('[name=' + key + ']');
+                $input.val(value);
+            });
+        }
+    });
 
 </script>
 

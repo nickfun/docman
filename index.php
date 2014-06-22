@@ -34,18 +34,52 @@ function viewListOfRoles($db) {
     loadView("view-list-roles.php", $list);
 }
 
+function saveTicket($roleId, $data, $db) {
+    $roleId = (int) $roleId;
+    $ticketId = (int) $data['ticket'];
+    // drop any existing data for this ticket
+    $sql = "delete from tickets where id=$ticketId;";
+    $db->exec($sql);
+    // insert new row
+    $value = json_encode($data, JSON_PRETTY_PRINT);
+    $sql = "insert into tickets (id,role_id,value) values (:ticketid,:roleid,:value);";
+    $stm = $db->prepare($sql);
+    $stm->bindParam("ticketid", $ticketId);
+    $stm->bindParam("roleid", $roleId);
+    $stm->bindParam("value", $value);
+    if (!$stm->execute()) {
+        throw new \Exception("I could not save data for ticket $ticketId");
+    }
+}
+
 /**
  * @route
  */
 function viewRole($db, $roleId) {
     $data = loadRoleData($db, $roleId);
     $data['roleId'] = $roleId;
+    $data['checkedOptions'] = array();
     loadView('view-form.php', $data);
 }
 
-function loadDataFromTicket($ticketId, $data) {
+function loadDataFromTicket($ticketId, $db) {
     $ticketId = (int) $ticketId;
-    $sql = "select * from tickets where id = $data";
+    $sql = "select * from tickets where id = $ticketId";
+    $results = fetchAll($sql, $db);
+    if (count($results) == 0) {
+        throw new \Exception("Can not find ticket $ticketId");
+    }
+    $roleId = (int) $results[0]['role_id'];
+    $ticketData = json_decode($results[0]['value']);
+    $roleData = loadRoleData($db, $roleId);
+    $roleData['roleId'] = $roleId;
+    $roleData['checkedOptions'] = $ticketData->option;
+    $roleData['meta'] = array(
+        'author' => $ticketData->author,
+        'ticket' => $ticketData->ticket,
+        'notes' => $ticketData->notes,
+    );
+    loadView('view-form.php', $roleData);
 }
 
 /**
@@ -173,6 +207,9 @@ function buildPdf($postData, $db) {
     $options = dataToArray($options);
     $groups = dataToArray($roleData['groups']);
     
+    // save results to database
+    saveTicket($postData['roleid'], $postData, $db);
+    
     try {
         $pdf = new Pdf('./doc.pdf');
         $pdf->addPage('Letter');
@@ -247,7 +284,7 @@ try {
     $routes['test'] = function($GET,$POST) {
         var_dump($GET,$POST);
     };
-    $routes['view-data'] = function($GET,$POST) use ($db) {
+    $routes['get-data'] = function($GET,$POST) use ($db) {
         $ticketId = $POST['ticket'];
         $data = loadDataFromTicket($ticketId, $db);
         loadView('view-form.php', $data);
@@ -264,7 +301,7 @@ try {
         $r = 'list-roles';
     }
     if (!isset($routes[$r])) {
-        throw new \Exception("I dont know what to do for this page. No route defined.");
+        throw new \Exception("I dont know what to do for this page. No route defined. $r");
     }
     $fn = $routes[$r];
     $fn($_GET, $_POST);
@@ -275,6 +312,7 @@ try {
         <h2><?= $ex->getMessage() ?></h2>
         <pre><?= $ex->getTraceAsString() ?></pre>
         <p><a href="<?= basename(__FILE__) ?>">Home</a></p>
+        <p><?= date('r') ?></p>
     </body>
     <?php
     die("EXCEPTION");
