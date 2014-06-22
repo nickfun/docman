@@ -43,6 +43,11 @@ function viewRole($db, $roleId) {
     loadView('view-form.php', $data);
 }
 
+function loadDataFromTicket($ticketId, $data) {
+    $ticketId = (int) $ticketId;
+    $sql = "select * from tickets where id = $data";
+}
+
 /**
  * Fetch all the data needed to display a form or a PDF for one role
  */
@@ -160,7 +165,6 @@ function pdfWriteln($pdf, $string, $type, $lastPosition = 760) {
  * @route POST
  */
 function buildPdf($postData, $db) {
-    echo "<pre>";
     $roleData = loadRoleData($db, $postData['roleid']);
 
     $listString = $postData['allOptionIds'];
@@ -168,8 +172,6 @@ function buildPdf($postData, $db) {
     $options = fetchAll($sql, $db);
     $options = dataToArray($options);
     $groups = dataToArray($roleData['groups']);
-    
-//    var_dump($roleData);die;
     
     try {
         $pdf = new Pdf('./doc.pdf');
@@ -184,13 +186,11 @@ function buildPdf($postData, $db) {
         $pdf->setCompression(true);
 
         $pdf->setTextParams();
-             //   ->setFillColor(new Rgb(12, 101, 215))
-             //   ->setStrokeColor(new Rgb(215, 101, 12));
         $pdf->addFont('Arial');
         
         $last = pdfWriteln($pdf, "Role: " . $roleData['role']['title'], "header");
         $last = pdfWriteln($pdf, "By: " . $postData['author'], 'txt', $last);
-        $last = pdfWriteln($pdf, "# " . $postData['ticket'], 'txt', $last);
+        $last = pdfWriteln($pdf, "TICKET# " . $postData['ticket'], 'txt', $last);
         $last = pdfWriteln($pdf, $postData['date'], 'txt', $last);
         
         foreach (explode("\n", $postData['notes']) as $noteLine) {
@@ -201,18 +201,6 @@ function buildPdf($postData, $db) {
             $groupId = $groupRow['group_id'];
             $groupObj = $groups[$groupId];
             $last = pdfWriteln($pdf, $groupObj['title'], "header", $last);
-            /*
-            $pdf->setTextParams()
-                ->setFillColor(new Rgb(0, 0, 0))
-                ->setStrokeColor(new Rgb(0, 0, 0));
-            $pdf->addText(30, $top, $size+10, $groupObj['title'], 'Arial');
-            $top = $top - $size - $padding;
-            if ( $top < $size + $padding + $padding) {
-                $top = $topOfPage;
-                $pdf->addPage("Letter");
-            }
-            
-             */
             foreach ($groupRow['options'] as $optionId) {
                 $optionObj = $options[$optionId];
                 if (isset($postData['option'][$optionId])) {
@@ -221,42 +209,13 @@ function buildPdf($postData, $db) {
                     $title = '[_] ' . $optionObj['title'];
                 }
                 $last = pdfWriteln($pdf, $title, 'option', $last);
-                /*
-                $pdf->setTextParams()
-                    ->setFillColor(new Rgb(12, 101, 215))
-                    ->setStrokeColor(new Rgb(215, 101, 12));
-                $pdf->addText(50, $top, $size, $title, 'Arial');
-                $top = $top - $size - $padding;
-                if ( $top < $size + $padding + $padding) {
-                    $top = $topOfPage;
-                    $pdf->addPage("Letter");
-                }
-                */
             }
             
         }
 
-        /*
-        foreach ($options as $option) {
-            $id = $option['id'];
-            $title = $option['title'];
-            if (isset($data['option'][$id])) {
-                $title = "[X] " . $title;
-            } else {
-                $title = "[ ] " . $title;
-            }
-            $pdf->addText(30, $top, $size, $title, 'Arial');
-            $top = $top - $size - $padding;
-            if ($top < ($size + $padding + $padding)) {
-                $top = $iStart;
-                $pdf->addPage("Letter");
-            }
-        }
-         */
-
-        $pdf->save("./output.pdf");
-        echo "<a href='./output.pdf'>Here it is</a>";
-        //$pdf->output();
+//        $pdf->save("./output.pdf");
+//        echo "<a href='./output.pdf'>Here it is</a>";
+        $pdf->output();
     } catch (\Exception $e) {
         var_dump($e->getTrace());
     }
@@ -272,6 +231,8 @@ $dsn = sprintf("mysql:host=%s;dbname=%s", $CONFIG['DB_HOST'], $CONFIG['DB_NAME']
 $db = new PDO($dsn, $CONFIG['DB_USER'], $CONFIG['DB_PASS']);
 
 try {
+    // Define Routes
+    // -------------
     $routes = array();
     $routes['list-roles'] = function($GET, $POST) use ($db) {
         viewListOfRoles($db);
@@ -284,11 +245,16 @@ try {
         buildPdf($_POST, $db);
     };
     $routes['test'] = function($GET,$POST) {
-        $pdf = new Pdf("./test.pdf");
-        $p = pdfWriteln($pdf, "Hello!", "txt");
-        $p = pdfWriteln($pdf, "HOw are you?", "txt", $p);
-        $p->output();
+        var_dump($GET,$POST);
     };
+    $routes['view-data'] = function($GET,$POST) use ($db) {
+        $ticketId = $POST['ticket'];
+        $data = loadDataFromTicket($ticketId, $db);
+        loadView('view-form.php', $data);
+    };
+    
+    // Execute Route
+    // -------------
 
     if (isset($_GET['route'])) {
         $r = $_GET['route'];
@@ -302,6 +268,7 @@ try {
     }
     $fn = $routes[$r];
     $fn($_GET, $_POST);
+    
 } catch (Exception $ex) {
     ?>
     <body><h1>ERROR</h1><p>There was a problem:</p>

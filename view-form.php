@@ -48,7 +48,7 @@ require_once 'view-header.php';
 <script type="text/template" id="tpl-optionlist">
     <div class="formcontrol">
     <label>
-    <input type="checkbox"  name="option[<%- id %>]" class="form-control">
+    <input type="checkbox"  name="option[<%- id %>]" class="form-control" <%- checked %> >
     <%- title %>
     </label>
     </div>
@@ -61,6 +61,7 @@ require_once 'view-header.php';
     window.DATA.groups = new Backbone.Collection(RAWDATA.groups);
     window.DATA.options = new Backbone.Collection(RAWDATA.options);
     window.DATA.groupOptionsMap = new Backbone.Collection(RAWDATA.groupOptionMap);
+    window.DATA.checkedOptions = RAWDATA.checkedOptions || [];
     
     window.DATA.options.toCsvList = function() {
         var str = this.reduce(function(memo, m) {
@@ -72,11 +73,16 @@ require_once 'view-header.php';
     var OptionListView = Backbone.View.extend({
         tpl: _.template($("#tpl-optionlist").text()),
         tagName: 'div',
-        className: 'aaaaaaa',
+        className: 'optionListView',
         render: function() {
             this.$el.empty();
             var that = this;
             this.collection.each(function(row) {
+                var checked = '';
+                if (_.has(window.DATA.checkedOptions, row.id)) {
+                    checked =  'checked=checked';
+                }
+                row.set('checked', checked);
                 var result = that.tpl(row.attributes);
                 //console.log("Result: ", result);
                 that.$el.append(result);
@@ -86,9 +92,8 @@ require_once 'view-header.php';
     });
 
     var GroupListView = Backbone.View.extend({
-        tpl: _.template($("#tpl-grouplist").text()),
         tagName: 'div',
-        className: 'bbbbbbb',
+        className: 'groupListView',
         render: function() {
             this.$el.empty();
             var optionList = new Backbone.Collection();
@@ -100,7 +105,7 @@ require_once 'view-header.php';
             });
             view.render();
             var group = window.DATA.groups.get(this.model.get('group_id'));
-            this.$el.append("<h2 class='cccccc'>" + group.get('title') + '</h2>');
+            this.$el.append("<h2>" + group.get('title') + '</h2>');
             this.$el.append(view.$el);
             return this;
         }

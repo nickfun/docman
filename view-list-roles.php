@@ -9,6 +9,13 @@ require_once 'view-header.php';
 	<input type="hidden" name="route" value="view-role">	
 </form>
 
+<h1>View existing Data</h1>
+<form method="post" action="index.php">
+    <input type="hidden" name="route" value="get-data">
+    <input type="text" name="ticket" placeholder="Ticket Number" required>
+    <button type="submit">Get the Data</button>
+</form>
+
 <script>
     var roles = <?= json_encode($DATA); ?>;
     $(function() {
